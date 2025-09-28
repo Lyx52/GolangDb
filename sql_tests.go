@@ -14,6 +14,12 @@ func main() {
 		return
 	}
 
+	statement = *parser.PopStatement()
+	err = statement.Execute(nil)
+	if err != nil {
+		return
+	}
+
 	err = parser.Parse("select usr.id, usr.username, (SELECT SUM(c.cost) FROM costs AS c WHERE c.user_id = usr.id) FROM users AS usr WHERE usr.id = 1;")
 	sql.RaiseIfError(err)
 

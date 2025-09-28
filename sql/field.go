@@ -12,6 +12,14 @@ type Field struct {
 	Value  any
 }
 
+func (field *Field) String() string {
+	if field.Alias != "" {
+		return field.Alias + "." + field.Name
+	}
+
+	return field.Name
+}
+
 func ParseFieldName(token *Token, commandStatement Statement) (*Field, error) {
 	parts := strings.Split(fmt.Sprint(token.Value), ".")
 	if len(parts) > 1 {

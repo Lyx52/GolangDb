@@ -17,3 +17,14 @@ func ParseWhereCombination(token *Token) WhereCombination {
 		return -1
 	}
 }
+
+func (combination WhereCombination) String() string {
+	switch combination {
+	case AND_COMBINATION:
+		return "AND"
+	case OR_COMBINATION:
+		return "OR"
+	default:
+		return "?"
+	}
+}

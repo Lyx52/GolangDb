@@ -19,32 +19,20 @@ func NewInsertStatement() *InsertStatement {
 }
 
 func (statement InsertStatement) String() string {
-	tableName := statement.TableName.Name
-	if statement.TableName.Schema != "" {
-		tableName = statement.TableName.Schema + "." + tableName
-	}
 
-	if statement.TableName.Alias != "" {
-		tableName = tableName + " AS " + statement.TableName.Alias
-	}
 	fieldNames := make([]string, 0)
 	values := make([]string, 0)
 	for _, field := range statement.Fields {
-		fieldName := field.Name
-		if field.Alias != "" {
-			fieldName = field.Alias + "." + fieldName
-		}
-
-		fieldNames = append(fieldNames, fieldName)
+		fieldNames = append(fieldNames, field.String())
 
 		values = append(values, fmt.Sprint(field.Value))
 	}
 
-	return fmt.Sprintf("INSERT INTO %v (%v) VALUES (%v);", tableName, strings.Join(fieldNames, ", "), strings.Join(values, ", "))
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", statement.TableName.String(), strings.Join(fieldNames, ", "), strings.Join(values, ", "))
 }
 
 func (statement InsertStatement) Execute(connection *Connection) error {
-	fmt.Printf("[EXECUTE INSERT] %v\n", statement.String())
+	fmt.Printf("[EXECUTE] %v\n", statement.String())
 	return nil
 }
 

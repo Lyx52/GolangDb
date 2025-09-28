@@ -1,12 +1,28 @@
 package sql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type UpdateStatement struct {
 	TableName *TableName
 	Fields    []Field
-	Where     *WhereStatement
+	Where     WhereStatement
 	Sources   map[string]*TableName
+}
+
+func (statement UpdateStatement) String() string {
+	//UPDATE users AS u SET u.username = 'tests', u.val = 123 WHERE u.id = 1 AND u.username = 'test' OR ((u.id = 123 AND u.username = 'tests') AND u.id = 232);
+	sets := make([]string, 0)
+	for _, field := range statement.Fields {
+		sets = append(sets, fmt.Sprintf("%s = %s", field.String(), fmt.Sprint(field.Value)))
+	}
+	if statement.Where != nil {
+		return fmt.Sprintf("UPDATE %s SET %s WHERE %s;", statement.TableName.String(), strings.Join(sets, ", "), statement.Where.String())
+	}
+
+	return fmt.Sprintf("UPDATE %s SET %s;", statement.TableName.String(), strings.Join(sets, ", "))
 }
 
 func NewUpdateStatement() *UpdateStatement {
@@ -17,6 +33,7 @@ func NewUpdateStatement() *UpdateStatement {
 }
 
 func (statement UpdateStatement) Execute(connection *Connection) error {
+	fmt.Printf("[EXECUTE] %v\n", statement.String())
 	return nil
 }
 

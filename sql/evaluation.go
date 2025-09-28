@@ -4,6 +4,7 @@ import "fmt"
 
 // WhereEvaluation or WhereEvaluationCombination
 type WhereStatement interface {
+	String() string
 }
 
 type WhereEvaluation struct {
@@ -11,11 +12,23 @@ type WhereEvaluation struct {
 	Operation WhereOperation
 }
 
+func (evaluation WhereEvaluation) String() string {
+	return fmt.Sprintf("%s %s %s", evaluation.Field.String(), evaluation.Operation.String(), fmt.Sprint(evaluation.Field.Value))
+}
+
 type WhereEvaluationCombination struct {
 	Left        WhereStatement
 	Right       WhereStatement
 	Combinatory WhereCombination
 	Depth       int
+}
+
+func (evaluationCombination WhereEvaluationCombination) String() string {
+	if evaluationCombination.Depth > 0 {
+		return fmt.Sprintf("(%s %s %s)", evaluationCombination.Left.String(), evaluationCombination.Combinatory.String(), evaluationCombination.Right.String())
+	}
+
+	return fmt.Sprintf("%s %s %s", evaluationCombination.Left.String(), evaluationCombination.Combinatory.String(), evaluationCombination.Right.String())
 }
 
 func ParseWhereEvaluation(lexer *BaseLexer, commandStatement Statement) (*WhereEvaluation, error) {

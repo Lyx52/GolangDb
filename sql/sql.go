@@ -53,6 +53,19 @@ type TableName struct {
 	Schema string
 }
 
+func (tableName TableName) String() string {
+	name := tableName.Name
+	if tableName.Schema != "" {
+		name = tableName.Schema + "." + name
+	}
+
+	if tableName.Alias != "" {
+		name = name + " AS " + tableName.Alias
+	}
+
+	return name
+}
+
 func NewSqlParser() *SqlParser {
 	return &SqlParser{}
 }
@@ -379,7 +392,7 @@ func (parser *SqlParser) ParseUpdate(lexer *BaseLexer) error {
 		if err != nil {
 			return err
 		}
-		statement.Where = &whereStatement
+		statement.Where = whereStatement
 	}
 	lexer.ConsumeTokens(WHITESPACE)
 	lexer.ConsumeTokens(SEMICOLUMN)

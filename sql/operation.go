@@ -14,3 +14,12 @@ func ParseWhereOperation(token *Token) WhereOperation {
 		return -1
 	}
 }
+
+func (operation WhereOperation) String() string {
+	switch operation {
+	case EQUALITY_OPERATION:
+		return "="
+	default:
+		return "?"
+	}
+}
