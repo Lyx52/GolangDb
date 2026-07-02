@@ -8,12 +8,12 @@ type WhereStatement interface {
 }
 
 type WhereEvaluation struct {
-	Field     *Field
+	Field     *FieldValue
 	Operation WhereOperation
 }
 
 func (evaluation WhereEvaluation) String() string {
-	return fmt.Sprintf("%s %s %s", evaluation.Field.String(), evaluation.Operation.String(), fmt.Sprint(evaluation.Field.Value))
+	return fmt.Sprintf("%s %s %s", evaluation.Field.Field.String(), evaluation.Operation.String(), fmt.Sprint(evaluation.Field.Value.String()))
 }
 
 type WhereEvaluationCombination struct {
@@ -37,9 +37,9 @@ func ParseWhereEvaluation(lexer *BaseLexer, commandStatement Statement) (*WhereE
 
 	var field *Token = nil
 	var operation WhereOperation
-	var value *Token = nil
-
-	for token != nil && IsTokenType(token.Type, WHITESPACE, OPERATOR_EQUALS, STRING, NUMBER) {
+	var value = make([]Token, 0)
+	var bracketOpen bool = false
+	for token != nil && (IsTokenType(token.Type, WHITESPACE, BRACKET_OPEN, BRACKET_CLOSE, COMMA, STRING, NUMBER) || IsWhereOperation(token)) {
 		if token.Type == WHITESPACE {
 			lexer.PopToken()
 			token = lexer.PeekToken()
@@ -60,17 +60,34 @@ func ParseWhereEvaluation(lexer *BaseLexer, commandStatement Statement) (*WhereE
 			continue
 		}
 
-		if value == nil && IsTokenType(token.Type, STRING, NUMBER) {
-			value = token
+		if !bracketOpen && len(value) <= 0 && token.Type == BRACKET_OPEN {
+			bracketOpen = true
+			value = append(value, *token)
 			lexer.PopToken()
 			token = lexer.PeekToken()
 			continue
 		}
 
+		if bracketOpen && token.Type == BRACKET_CLOSE {
+			bracketOpen = false
+			value = append(value, *token)
+			lexer.PopToken()
+			token = lexer.PeekToken()
+			continue
+		} else if token.Type == BRACKET_CLOSE {
+			break
+		}
+
+		value = append(value, *token)
+		lexer.PopToken()
 		token = lexer.PeekToken()
 	}
 
-	if value == nil {
+	if bracketOpen {
+		return nil, fmt.Errorf("expected a closing bracket")
+	}
+
+	if len(value) <= 0 {
 		return nil, fmt.Errorf("expected value")
 	}
 
@@ -82,11 +99,14 @@ func ParseWhereEvaluation(lexer *BaseLexer, commandStatement Statement) (*WhereE
 	if err != nil {
 		return nil, err
 	}
-
-	evaluationField.Value = value.Value
+	var evaluationFieldValue *Value
+	evaluationFieldValue, err = ParseValue(value...)
+	if err != nil {
+		return nil, err
+	}
 
 	return &WhereEvaluation{
-		Field:     evaluationField,
+		Field:     &FieldValue{Field: evaluationField, Value: evaluationFieldValue},
 		Operation: operation,
 	}, nil
 }

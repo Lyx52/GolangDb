@@ -8,7 +8,7 @@ type StringReader struct {
 }
 
 func (s *StringReader) Peek(length int) *string {
-	if (s.pos + length) >= (len(s.buffer) - 1) {
+	if (s.pos + length) >= len(s.buffer) {
 		return nil
 	}
 

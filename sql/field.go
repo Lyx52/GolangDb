@@ -5,11 +5,39 @@ import (
 	"strings"
 )
 
+type ValueType int
+
+const (
+	ARRAY_VALUE  ValueType = iota
+	STRING_VALUE ValueType = iota
+	NUMBER_VALUE ValueType = iota
+)
+
+type Value struct {
+	Type ValueType
+	Data any
+}
+
+func (value Value) String() string {
+	switch value.Type {
+	case ARRAY_VALUE:
+		result := make([]string, 0)
+		for _, value := range value.Data.([]any) {
+			result = append(result, fmt.Sprint(value))
+		}
+
+		return fmt.Sprintf("(%v)", strings.Join(result, ", "))
+	case STRING_VALUE:
+		return fmt.Sprintf("'%s'", value.Data.(string))
+	}
+
+	return fmt.Sprintf("%v", value.Data)
+}
+
 type Field struct {
 	Name   string
 	Alias  string
 	Source *TableName
-	Value  any
 }
 
 func (field *Field) String() string {
@@ -46,4 +74,13 @@ func ParseFieldName(token *Token, commandStatement Statement) (*Field, error) {
 		Alias:  "",
 		Source: commandStatement.GetBaseTable(),
 	}, nil
+}
+
+type FieldValue struct {
+	Field *Field
+	Value *Value
+}
+
+func (fieldValue *FieldValue) SetFieldValueString() string {
+	return fmt.Sprintf("%s = %s", fieldValue.Field.String(), fieldValue.Field.String())
 }

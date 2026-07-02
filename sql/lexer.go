@@ -139,6 +139,19 @@ func (lexer *BaseLexer) Tokenize() error {
 			lexer.PushToken(UPDATE, nil, lexer.reader.pos)
 		case lexer.TryConsumeString(InsertTokenString):
 			lexer.PushToken(INSERT, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(CreateTokenString):
+			lexer.PushToken(CREATE, nil, lexer.reader.pos)
+
+		case lexer.TryConsumeString(DatabasesTokenString):
+			lexer.PushToken(DATABASES, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(DatabaseTokenString):
+			lexer.PushToken(DATABASE, nil, lexer.reader.pos)
+		case lexer.TryString(TablesTokenString):
+			lexer.PushToken(TABLES, nil, lexer.reader.pos)
+		case lexer.TryString(TableTokenString):
+			lexer.PushToken(TABLE, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(ViewTokenString):
+			lexer.PushToken(VIEW, nil, lexer.reader.pos)
 		case lexer.TryConsumeString(IntoTokenString):
 			lexer.PushToken(INTO, nil, lexer.reader.pos)
 		case lexer.TryConsumeString(AsTokenString):
@@ -153,6 +166,12 @@ func (lexer *BaseLexer) Tokenize() error {
 			lexer.PushToken(AND, nil, lexer.reader.pos)
 		case lexer.TryConsumeString(OrTokenString):
 			lexer.PushToken(OR, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(InTokenString):
+			lexer.PushToken(IN, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(UseTokenString):
+			lexer.PushToken(USE, nil, lexer.reader.pos)
+		case lexer.TryConsumeString(ShowTokenString):
+			lexer.PushToken(SHOW, nil, lexer.reader.pos)
 		case IsLetterOrDigit(next) || next == '-' || next == '"' || next == '\'':
 			res := make([]rune, 0)
 			negative := false

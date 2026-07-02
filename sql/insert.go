@@ -3,18 +3,20 @@ package sql
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Lyx52/GolangDb/backing"
 )
 
 type InsertStatement struct {
 	TableName *TableName
-	Fields    []Field
+	Fields    []FieldValue
 	Sources   map[string]*TableName
 }
 
 func NewInsertStatement() *InsertStatement {
 	return &InsertStatement{
 		Sources: make(map[string]*TableName),
-		Fields:  make([]Field, 0),
+		Fields:  make([]FieldValue, 0),
 	}
 }
 
@@ -23,15 +25,15 @@ func (statement InsertStatement) String() string {
 	fieldNames := make([]string, 0)
 	values := make([]string, 0)
 	for _, field := range statement.Fields {
-		fieldNames = append(fieldNames, field.String())
+		fieldNames = append(fieldNames, field.Field.String())
 
-		values = append(values, fmt.Sprint(field.Value))
+		values = append(values, field.Value.String())
 	}
 
 	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", statement.TableName.String(), strings.Join(fieldNames, ", "), strings.Join(values, ", "))
 }
 
-func (statement InsertStatement) Execute(connection *Connection) error {
+func (statement InsertStatement) Execute(context *backing.ServerContext) error {
 	fmt.Printf("[EXECUTE] %v\n", statement.String())
 	return nil
 }

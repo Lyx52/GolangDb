@@ -1,5 +1,7 @@
 package sql
 
+import "fmt"
+
 type TokenType int
 
 const (
@@ -15,6 +17,13 @@ const (
 	INSERT                TokenType = iota
 	UPDATE                TokenType = iota
 	DELETE                TokenType = iota
+	CREATE                TokenType = iota
+	DATABASE              TokenType = iota
+	TABLE                 TokenType = iota
+	DATABASES             TokenType = iota
+	TABLES                TokenType = iota
+	VIEW                  TokenType = iota
+	SHOW                  TokenType = iota
 	FROM                  TokenType = iota
 	INTO                  TokenType = iota
 	AS                    TokenType = iota
@@ -22,6 +31,8 @@ const (
 	VALUES                TokenType = iota
 	AND                   TokenType = iota
 	OR                    TokenType = iota
+	IN                    TokenType = iota
+	USE                   TokenType = iota
 	WHERE                 TokenType = iota
 	STRING                TokenType = iota
 	NUMBER                TokenType = iota
@@ -55,6 +66,18 @@ func (tokenType TokenType) String() string {
 		return "UPDATE"
 	case DELETE:
 		return "DELETE"
+	case CREATE:
+		return "CREATE"
+	case DATABASE:
+		return "DATABASE"
+	case TABLE:
+		return "TABLE"
+	case DATABASES:
+		return "DATABASES"
+	case TABLES:
+		return "TABLES"
+	case VIEW:
+		return "VIEW"
 	case FROM:
 		return "FROM"
 	case INTO:
@@ -83,28 +106,47 @@ func (tokenType TokenType) String() string {
 		return "WHERE"
 	case AND:
 		return "AND"
+	case IN:
+		return "IN"
+	case USE:
+		return "USE"
+	case SHOW:
+		return "SHOW"
 	default:
 		return "UNKNOWN"
 	}
 }
 
 const (
-	SelectTokenString string = "SELECT"
-	InsertTokenString string = "INSERT"
-	UpdateTokenString string = "UPDATE"
-	DeleteTokenString string = "DELETE"
-	FromTokenString   string = "FROM"
-	IntoTokenString   string = "INTO"
-	AsTokenString     string = "AS"
-	SetTokenString    string = "SET"
-	ValuesTokenString string = "VALUES"
-	WhereTokenString  string = "WHERE"
-	AndTokenString    string = "AND"
-	OrTokenString     string = "OR"
+	SelectTokenString    string = "SELECT"
+	InsertTokenString    string = "INSERT"
+	UpdateTokenString    string = "UPDATE"
+	DeleteTokenString    string = "DELETE"
+	CreateTokenString    string = "CREATE"
+	DatabaseTokenString  string = "DATABASE"
+	TableTokenString     string = "TABLE"
+	DatabasesTokenString string = "DATABASES"
+	TablesTokenString    string = "TABLES"
+	ViewTokenString      string = "VIEW"
+	FromTokenString      string = "FROM"
+	IntoTokenString      string = "INTO"
+	AsTokenString        string = "AS"
+	SetTokenString       string = "SET"
+	ValuesTokenString    string = "VALUES"
+	WhereTokenString     string = "WHERE"
+	AndTokenString       string = "AND"
+	OrTokenString        string = "OR"
+	InTokenString        string = "IN"
+	UseTokenString       string = "USE"
+	ShowTokenString      string = "SHOW"
 )
 
 type Token struct {
 	Type     TokenType
 	Value    any
 	Position int
+}
+
+func (token Token) StringValue() string {
+	return fmt.Sprint(token.Value)
 }
