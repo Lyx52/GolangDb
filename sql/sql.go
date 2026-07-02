@@ -563,8 +563,55 @@ func (parser *SqlParser) ParseCreateTable(lexer *BaseLexer) (error, *CreateTable
 	if tableNameToken == nil || tableNameToken.Type != STRING {
 		return fmt.Errorf("expected table name token"), nil
 	}
-
+	lexer.ConsumeTokens(WHITESPACE)
+	err := lexer.ConsumeExpectToken(BRACKET_OPEN)
+	if err != nil {
+		return err, nil
+	}
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PeekToken()
+	if next == nil {
+		return fmt.Errorf("expected tokens after bracket open token"), nil
+	}
 	statement := NewCreateTableStatement(tableNameToken.StringValue())
+
+	continueFields := true
+	for continueFields {
+		lexer.ConsumeTokens(WHITESPACE)
+		fieldName := lexer.PopToken()
+		if fieldName == nil || fieldName.Type != STRING {
+			return fmt.Errorf("expected field name token"), nil
+		}
+		err = lexer.ConsumeExpectToken(WHITESPACE)
+		if err != nil {
+			return err, nil
+		}
+
+		fieldType := lexer.PopToken()
+		if fieldType == nil || fieldType.Type != STRING {
+			return fmt.Errorf("expected field type token"), nil
+		}
+
+		err = statement.AddField(fieldName.StringValue(), fieldType.StringValue())
+
+		if err != nil {
+			return err, nil
+		}
+
+		lexer.ConsumeTokens(WHITESPACE)
+		next = lexer.PeekToken()
+		if next == nil || next.Type != COMMA {
+			continueFields = false
+		} else {
+			lexer.PopToken()
+		}
+	}
+
+	lexer.ConsumeTokens(WHITESPACE)
+	err = lexer.ConsumeExpectToken(BRACKET_CLOSE)
+	if err != nil {
+		return err, nil
+	}
 
 	return nil, statement
 }

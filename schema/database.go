@@ -1,4 +1,4 @@
-package objects
+package schema
 
 type Database struct {
 	Name string

@@ -24,13 +24,21 @@ func main() {
 		return
 	}
 
-	err = parser.Parse("SHOW DATABASES;")
+	err = parser.Parse("CREATE TABLE users (id integer,test integer,   aaa integer);")
 	sql.RaiseIfError(err)
 	statement = *parser.PopStatement()
 	err = statement.Execute(context)
 	if err != nil {
 		return
 	}
+	//
+	//err = parser.Parse("SHOW TABLES;")
+	//sql.RaiseIfError(err)
+	//statement = *parser.PopStatement()
+	//err = statement.Execute(context)
+	//if err != nil {
+	//	return
+	//}
 
 	//
 	//err = parser.Parse("INSERT INTO dbs.users AS u (u.id, u.username) VALUES (1 'tests');")

@@ -105,8 +105,17 @@ func (lexer *BaseLexer) ConsumeExpectToken(typ TokenType) error {
 	lexer.PopToken()
 	return nil
 }
-
 func (lexer *BaseLexer) Tokenize() error {
+	err := lexer.TokenizeFirstPass()
+	if err != nil {
+		return err
+	}
+
+	lexer.TokenizeKeywordPass()
+	return nil
+}
+
+func (lexer *BaseLexer) TokenizeFirstPass() error {
 	next := lexer.reader.PeekNext()
 	for next > 0 {
 		switch {
@@ -131,47 +140,6 @@ func (lexer *BaseLexer) Tokenize() error {
 		case next == ';':
 			lexer.reader.Next()
 			lexer.PushToken(SEMICOLUMN, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(SelectTokenString):
-			lexer.PushToken(SELECT, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(DeleteTokenString):
-			lexer.PushToken(DELETE, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(UpdateTokenString):
-			lexer.PushToken(UPDATE, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(InsertTokenString):
-			lexer.PushToken(INSERT, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(CreateTokenString):
-			lexer.PushToken(CREATE, nil, lexer.reader.pos)
-
-		case lexer.TryConsumeString(DatabasesTokenString):
-			lexer.PushToken(DATABASES, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(DatabaseTokenString):
-			lexer.PushToken(DATABASE, nil, lexer.reader.pos)
-		case lexer.TryString(TablesTokenString):
-			lexer.PushToken(TABLES, nil, lexer.reader.pos)
-		case lexer.TryString(TableTokenString):
-			lexer.PushToken(TABLE, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(ViewTokenString):
-			lexer.PushToken(VIEW, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(IntoTokenString):
-			lexer.PushToken(INTO, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(AsTokenString):
-			lexer.PushToken(AS, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(SetTokenString):
-			lexer.PushToken(SET, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(ValuesTokenString):
-			lexer.PushToken(VALUES, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(WhereTokenString):
-			lexer.PushToken(WHERE, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(AndTokenString):
-			lexer.PushToken(AND, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(OrTokenString):
-			lexer.PushToken(OR, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(InTokenString):
-			lexer.PushToken(IN, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(UseTokenString):
-			lexer.PushToken(USE, nil, lexer.reader.pos)
-		case lexer.TryConsumeString(ShowTokenString):
-			lexer.PushToken(SHOW, nil, lexer.reader.pos)
 		case IsLetterOrDigit(next) || next == '-' || next == '"' || next == '\'':
 			res := make([]rune, 0)
 			negative := false
@@ -208,4 +176,95 @@ func (lexer *BaseLexer) Tokenize() error {
 	}
 
 	return nil
+}
+
+func (lexer *BaseLexer) TokenizeKeywordPass() {
+	for i, token := range lexer.tokens {
+		if token.Type != STRING {
+			continue
+		}
+
+		switch token.StringValue() {
+		case SelectTokenString:
+			lexer.tokens[i].Type = SELECT
+			lexer.tokens[i].Value = nil
+			break
+		case DeleteTokenString:
+			lexer.tokens[i].Type = DELETE
+			lexer.tokens[i].Value = nil
+			break
+		case UpdateTokenString:
+			lexer.tokens[i].Type = UPDATE
+			lexer.tokens[i].Value = nil
+			break
+		case InsertTokenString:
+			lexer.tokens[i].Type = INSERT
+			lexer.tokens[i].Value = nil
+			break
+		case CreateTokenString:
+			lexer.tokens[i].Type = CREATE
+			lexer.tokens[i].Value = nil
+			break
+		case DatabasesTokenString:
+			lexer.tokens[i].Type = DATABASES
+			lexer.tokens[i].Value = nil
+			break
+		case DatabaseTokenString:
+			lexer.tokens[i].Type = DATABASE
+			lexer.tokens[i].Value = nil
+			break
+		case TablesTokenString:
+			lexer.tokens[i].Type = TABLES
+			lexer.tokens[i].Value = nil
+			break
+		case TableTokenString:
+			lexer.tokens[i].Type = TABLE
+			lexer.tokens[i].Value = nil
+			break
+		case ViewTokenString:
+			lexer.tokens[i].Type = VIEW
+			lexer.tokens[i].Value = nil
+			break
+		case IntoTokenString:
+			lexer.tokens[i].Type = INTO
+			lexer.tokens[i].Value = nil
+			break
+		case AsTokenString:
+			lexer.tokens[i].Type = AS
+			lexer.tokens[i].Value = nil
+			break
+		case SetTokenString:
+			lexer.tokens[i].Type = SET
+			lexer.tokens[i].Value = nil
+			break
+		case ValuesTokenString:
+			lexer.tokens[i].Type = VALUES
+			lexer.tokens[i].Value = nil
+			break
+		case WhereTokenString:
+			lexer.tokens[i].Type = WHERE
+			lexer.tokens[i].Value = nil
+			break
+		case AndTokenString:
+			lexer.tokens[i].Type = AND
+			lexer.tokens[i].Value = nil
+			break
+		case OrTokenString:
+			lexer.tokens[i].Type = OR
+			lexer.tokens[i].Value = nil
+			break
+		case InTokenString:
+			lexer.tokens[i].Type = IN
+			lexer.tokens[i].Value = nil
+			break
+		case UseTokenString:
+			lexer.tokens[i].Type = USE
+			lexer.tokens[i].Value = nil
+			break
+		case ShowTokenString:
+			lexer.tokens[i].Type = SHOW
+			lexer.tokens[i].Value = nil
+			break
+		}
+	}
 }

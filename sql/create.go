@@ -27,7 +27,7 @@ func (createType CreateObjectType) String() string {
 	case CREATE_VIEW:
 		return "VIEW"
 	default:
-		return ""
+		return "?"
 	}
 }
 

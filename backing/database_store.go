@@ -3,22 +3,22 @@ package backing
 import (
 	"fmt"
 
-	"github.com/Lyx52/GolangDb/objects"
+	"github.com/Lyx52/GolangDb/schema"
 )
 
 type DatabaseStore struct {
-	Databases            map[string]*objects.Database
+	Databases            map[string]*schema.Database
 	DatabaseToTableStore map[string]*TableStore
 }
 
 func NewDatabaseStore() *DatabaseStore {
 	return &DatabaseStore{
-		Databases:            make(map[string]*objects.Database),
+		Databases:            make(map[string]*schema.Database),
 		DatabaseToTableStore: make(map[string]*TableStore),
 	}
 }
 
-func (store *DatabaseStore) GetDatabase(name string) (error, *objects.Database) {
+func (store *DatabaseStore) GetDatabase(name string) (error, *schema.Database) {
 	database, exists := store.Databases[name]
 	if exists {
 		return nil, database
@@ -36,13 +36,13 @@ func (store *DatabaseStore) GetDatabaseTableStore(name string) (error, *TableSto
 	return fmt.Errorf("database %s does not exist", name), nil
 }
 
-func (store *DatabaseStore) CreateDatabase(name string) (error, *objects.Database) {
+func (store *DatabaseStore) CreateDatabase(name string) (error, *schema.Database) {
 	_, exists := store.Databases[name]
 	if exists {
 		return fmt.Errorf("database with name %s already exists", name), nil
 	}
 
-	store.Databases[name] = objects.NewDatabase(name)
+	store.Databases[name] = schema.NewDatabase(name)
 	store.DatabaseToTableStore[name] = NewTableStore(store.Databases[name])
 	return nil, store.Databases[name]
 }
