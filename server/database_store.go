@@ -1,4 +1,4 @@
-package backing
+package server
 
 import (
 	"fmt"
@@ -7,14 +7,12 @@ import (
 )
 
 type DatabaseStore struct {
-	Databases            map[string]*schema.Database
-	DatabaseToTableStore map[string]*TableStore
+	Databases map[string]*schema.Database
 }
 
 func NewDatabaseStore() *DatabaseStore {
 	return &DatabaseStore{
-		Databases:            make(map[string]*schema.Database),
-		DatabaseToTableStore: make(map[string]*TableStore),
+		Databases: make(map[string]*schema.Database),
 	}
 }
 
@@ -27,15 +25,6 @@ func (store *DatabaseStore) GetDatabase(name string) (error, *schema.Database) {
 	return fmt.Errorf("database %s does not exist", name), nil
 }
 
-func (store *DatabaseStore) GetDatabaseTableStore(name string) (error, *TableStore) {
-	tableStore, exists := store.DatabaseToTableStore[name]
-	if exists {
-		return nil, tableStore
-	}
-
-	return fmt.Errorf("database %s does not exist", name), nil
-}
-
 func (store *DatabaseStore) CreateDatabase(name string) (error, *schema.Database) {
 	_, exists := store.Databases[name]
 	if exists {
@@ -43,6 +32,5 @@ func (store *DatabaseStore) CreateDatabase(name string) (error, *schema.Database
 	}
 
 	store.Databases[name] = schema.NewDatabase(name)
-	store.DatabaseToTableStore[name] = NewTableStore(store.Databases[name])
 	return nil, store.Databases[name]
 }

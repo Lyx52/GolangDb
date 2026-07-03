@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/models"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type UpdateStatement struct {
@@ -34,8 +35,49 @@ func NewUpdateStatement() *UpdateStatement {
 	}
 }
 
-func (statement UpdateStatement) Execute(context *backing.ServerContext) error {
+func (statement UpdateStatement) Execute(context *server.ServerContext) error {
 	fmt.Printf("[EXECUTE] %v\n", statement.String())
+	err, database := context.DatabaseStore.GetDatabase(statement.TableName.Schema)
+	if err != nil {
+		return err
+	}
+
+	err, table := database.GetTable(statement.TableName.Name)
+	if err != nil {
+		return err
+	}
+
+	sets := make([]func(row *models.DataRow), len(statement.Fields))
+	for i, source := range statement.Fields {
+		field := table.Fields[source.Field.Name]
+		err = field.ValidateValue(source.Value.Data)
+		if err != nil {
+			return err
+		}
+
+		sets[i] = func(row *models.DataRow) {
+			row.Values[field.Index] = source.Value.Data
+		}
+	}
+
+	//row := models.DataRow{
+	//	Values: make([]models.ColumnValue, len(table.Fields)),
+	//}
+	//for _, source := range statement.Fields {
+	//	field := table.Fields[source.Field.Name]
+	//
+
+	//
+	//	row.Values[field.Index] = source.Value.Data
+	//}
+	//
+	go func() {
+		for _, row := range table.Datastore.Values {
+			for _, set := range sets {
+				set(row)
+			}
+		}
+	}()
 	return nil
 }
 

@@ -3,7 +3,7 @@ package sql
 import (
 	"fmt"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type CreateDatabaseStatement struct {
@@ -20,7 +20,7 @@ func (statement CreateDatabaseStatement) String() string {
 	return statement.Name
 }
 
-func (statement CreateDatabaseStatement) Execute(context *backing.ServerContext) error {
+func (statement CreateDatabaseStatement) Execute(context *server.ServerContext) error {
 	err, database := context.CreateDatabase(statement.Name)
 	if err != nil {
 		return err

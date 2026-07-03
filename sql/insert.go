@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/models"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type InsertStatement struct {
@@ -33,8 +34,35 @@ func (statement InsertStatement) String() string {
 	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", statement.TableName.String(), strings.Join(fieldNames, ", "), strings.Join(values, ", "))
 }
 
-func (statement InsertStatement) Execute(context *backing.ServerContext) error {
+func (statement InsertStatement) Execute(context *server.ServerContext) error {
 	fmt.Printf("[EXECUTE] %v\n", statement.String())
+	err, database := context.DatabaseStore.GetDatabase(statement.TableName.Schema)
+	if err != nil {
+		return err
+	}
+
+	err, table := database.GetTable(statement.TableName.Name)
+	if err != nil {
+		return err
+	}
+	row := models.DataRow{
+		Values: make([]models.ColumnValue, len(table.Fields)),
+	}
+	for _, source := range statement.Fields {
+		field := table.Fields[source.Field.Name]
+
+		err = field.ValidateValue(source.Value.Data)
+		if err != nil {
+			return err
+		}
+
+		row.Values[field.Index] = source.Value.Data
+	}
+
+	go func() {
+		table.Datastore.AppendChannel <- row
+	}()
+
 	return nil
 }
 

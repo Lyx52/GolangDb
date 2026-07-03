@@ -7,6 +7,7 @@ import (
 
 type TableField struct {
 	Name        string
+	Index       int
 	Type        FieldType
 	Constraints []Constraint
 	table       *Table
@@ -38,5 +39,16 @@ func (tt *TableField) RemoveConstraint(constraint *Constraint) error {
 		return fmt.Errorf("constraint %s not found in table %s", constraint.String(), tt.table.Name)
 	}
 
+	return nil
+}
+
+func (tt *TableField) ValidateValue(value any) error {
+	var err error
+	for _, constraint := range tt.Constraints {
+		err = constraint.Validator(tt, value)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

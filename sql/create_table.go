@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Lyx52/GolangDb/backing"
 	"github.com/Lyx52/GolangDb/schema"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type FieldDefinition struct {
@@ -52,7 +52,7 @@ func (statement *CreateTableStatement) String() string {
 	return fmt.Sprintf("CREATE TABLE %s (%s)", statement.Name, strings.Join(fields, ", "))
 }
 
-func (statement *CreateTableStatement) Execute(context *backing.ServerContext) error {
+func (statement *CreateTableStatement) Execute(context *server.ServerContext) error {
 	err, table := context.CreateTable(statement.Name)
 	if err != nil {
 		return err

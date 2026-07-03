@@ -5,14 +5,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type Statement interface {
 	GetTableName(alias string) (*TableName, error)
 	PushTableName(alias string, tableName *TableName) error
 	GetBaseTable() *TableName
-	Execute(context *backing.ServerContext) error
+	Execute(context *server.ServerContext) error
 }
 
 type SqlParser struct {
@@ -115,41 +115,71 @@ func ParseList(lexer *BaseLexer, allowedTypes ...TokenType) ([][]Token, error) {
 	return res, nil
 }
 
-func ParseValueList(lexer *BaseLexer, mandatoryComma bool, allowNumbers bool) ([]*Token, error) {
-	token := lexer.PeekToken()
+func ParseValueList(lexer *BaseLexer, mandatoryComma bool, allowedTypes ...TokenType) (error, []*Token) {
 	res := make([]*Token, 0)
-	expectComma := false
-	expectSpace := false
-	for token != nil && (token.Type == STRING || token.Type == COMMA || token.Type == WHITESPACE || (allowNumbers && token.Type == NUMBER)) {
-		if token.Type == WHITESPACE {
-			lexer.PopToken()
-			token = lexer.PeekToken()
-			expectSpace = false
-			continue
-		} else if expectSpace {
-			return res, fmt.Errorf("expected space position at %v", token.Position)
+	continueValues := true
+	for continueValues {
+		lexer.ConsumeTokens(WHITESPACE)
+		next := lexer.PopToken()
+		if next == nil || !IsTokenType(next.Type, allowedTypes...) {
+			return fmt.Errorf("expected field name token"), nil
 		}
 
-		if expectComma && token.Type != COMMA {
-			return res, fmt.Errorf("expected comma position at %v", token.Position)
-		} else if token.Type == COMMA {
-			lexer.PopToken()
-			expectComma = false
+		res = append(res, next)
+		if mandatoryComma {
+			lexer.ConsumeTokens(WHITESPACE)
 		}
 
-		if token.Type == STRING || token.Type == NUMBER {
-			lexer.PopToken()
-			res = append(res, token)
-			token = lexer.PeekToken()
-			expectComma = mandatoryComma
-			expectSpace = !mandatoryComma
-			continue
+		next = lexer.PeekToken()
+		if mandatoryComma {
+			if next == nil || next.Type != COMMA {
+				continueValues = false
+			} else {
+				lexer.PopToken()
+			}
+		} else {
+			if next == nil || !IsTokenType(next.Type, WHITESPACE, COMMA) {
+				continueValues = false
+			} else {
+				lexer.PopToken()
+				lexer.ConsumeTokens(WHITESPACE)
+			}
 		}
-
-		token = lexer.PeekToken()
 	}
-
-	return res, nil
+	return nil, res
+	//
+	//expectComma := false
+	//expectSpace := false
+	//for token != nil && (token.Type == STRING || token.Type == COMMA || token.Type == WHITESPACE || (allowNumbers && token.Type == NUMBER)) {
+	//	if token.Type == WHITESPACE {
+	//		lexer.PopToken()
+	//		token = lexer.PeekToken()
+	//		expectSpace = false
+	//		continue
+	//	} else if expectSpace {
+	//		return res, fmt.Errorf("expected space position at %v", token.Position)
+	//	}
+	//
+	//	if expectComma && token.Type != COMMA {
+	//		return res, fmt.Errorf("expected comma position at %v", token.Position)
+	//	} else if token.Type == COMMA {
+	//		lexer.PopToken()
+	//		expectComma = false
+	//	}
+	//
+	//	if token.Type == STRING || token.Type == NUMBER {
+	//		lexer.PopToken()
+	//		res = append(res, token)
+	//		token = lexer.PeekToken()
+	//		expectComma = mandatoryComma
+	//		expectSpace = !mandatoryComma
+	//		continue
+	//	}
+	//
+	//	token = lexer.PeekToken()
+	//}
+	//
+	//return res, nil
 }
 
 func ParseTableName(lexer *BaseLexer, allowAlias bool) (*TableName, error) {
@@ -225,7 +255,7 @@ func (parser *SqlParser) ParseInsert(lexer *BaseLexer) error {
 		return err
 	}
 
-	fields, err := ParseValueList(lexer, true, false)
+	err, fields := ParseValueList(lexer, true, STRING)
 	if err != nil {
 		return err
 	}
@@ -242,14 +272,14 @@ func (parser *SqlParser) ParseInsert(lexer *BaseLexer) error {
 		return err
 	}
 
-	// ' (value1 value2 value) '
+	// ' (value1, value2, value) '
 	lexer.ConsumeTokens(WHITESPACE)
 	err = lexer.ConsumeExpectToken(BRACKET_OPEN)
 	if err != nil {
 		return err
 	}
 
-	values, err := ParseValueList(lexer, false, true)
+	err, values := ParseValueList(lexer, false, STRING, NUMBER)
 	if err != nil {
 		return err
 	}

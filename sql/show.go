@@ -3,7 +3,7 @@ package sql
 import (
 	"fmt"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type ShowObjectType int
@@ -38,7 +38,7 @@ func (statement ShowStatement) String() string {
 	return fmt.Sprintf("SHOW %s;", statement.Type.String())
 }
 
-func (statement ShowStatement) Execute(context *backing.ServerContext) error {
+func (statement ShowStatement) Execute(context *server.ServerContext) error {
 	fmt.Printf("[EXECUTE] %v\n", statement.String())
 	var err error = nil
 	if statement.Type == SHOW_DATABASES {
@@ -52,7 +52,7 @@ func (statement ShowStatement) Execute(context *backing.ServerContext) error {
 	return err
 }
 
-func PrintDatabases(context *backing.ServerContext) {
+func PrintDatabases(context *server.ServerContext) {
 	fmt.Println("Databases")
 	fmt.Println("----------------------------")
 	for _, database := range context.DatabaseStore.Databases {
@@ -61,12 +61,12 @@ func PrintDatabases(context *backing.ServerContext) {
 	fmt.Println("----------------------------")
 }
 
-func PrintTables(context *backing.ServerContext) error {
+func PrintTables(context *server.ServerContext) error {
 	err := context.CheckDatabaseConnected()
 	if err != nil {
 		return err
 	}
-	err, tableStore := context.DatabaseStore.GetDatabaseTableStore(context.CurrentDatabase.Name)
+	err, database := context.DatabaseStore.GetDatabase(context.CurrentDatabase.Name)
 
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func PrintTables(context *backing.ServerContext) error {
 
 	fmt.Println("Tables")
 	fmt.Println("----------------------------")
-	for _, table := range tableStore.Tables {
+	for _, table := range database.Tables {
 		fmt.Println(table.String())
 	}
 	fmt.Println("----------------------------")

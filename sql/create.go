@@ -3,13 +3,13 @@ package sql
 import (
 	"fmt"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/server"
 )
 
 type CreateObjectType int
 type CreateObjectStatement interface {
 	String() string
-	Execute(context *backing.ServerContext) error
+	Execute(context *server.ServerContext) error
 }
 
 const (
@@ -46,7 +46,7 @@ func (statement CreateStatement) String() string {
 	return fmt.Sprintf("CREATE %s %s;", statement.Type.String(), (*statement.SubStatement).String())
 }
 
-func (statement CreateStatement) Execute(context *backing.ServerContext) error {
+func (statement CreateStatement) Execute(context *server.ServerContext) error {
 	fmt.Printf("[EXECUTE] %v\n", statement.String())
 	return (*statement.SubStatement).Execute(context)
 }

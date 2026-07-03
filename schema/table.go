@@ -1,23 +1,29 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Lyx52/GolangDb/backing"
+)
 
 type Table struct {
-	Name     string
-	Fields   map[string]*TableField
-	database *Database
+	Name      string
+	Fields    map[string]*TableField
+	Datastore *backing.DataStore
+	database  *Database
 }
 
 func NewTable(name string, database *Database) *Table {
 	return &Table{
-		Name:     name,
-		Fields:   make(map[string]*TableField),
-		database: database,
+		Name:      name,
+		Fields:    make(map[string]*TableField),
+		database:  database,
+		Datastore: backing.NewDataStore(),
 	}
 }
 
 func (table *Table) String() string {
-	return fmt.Sprintf("%s.%s", table.database.String(), table.Name)
+	return fmt.Sprintf("%s.%s (%v)", table.database.String(), table.Name, len(table.Datastore.Values))
 }
 
 func (table *Table) CreateField(name string, fieldType FieldType, constraints []*Constraint) error {
@@ -37,6 +43,7 @@ func (table *Table) CreateField(name string, fieldType FieldType, constraints []
 		}
 	}
 
+	field.Index = len(table.Fields)
 	table.Fields[name] = field
 	return nil
 }
