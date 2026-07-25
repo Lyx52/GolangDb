@@ -72,9 +72,9 @@ func (statement UpdateStatement) Execute(context *server.ServerContext) error {
 	//}
 	//
 	go func() {
-		for _, row := range table.Datastore.Values {
+		for i, _ := range table.Datastore.Values {
 			for _, set := range sets {
-				set(row)
+				set(table.Datastore.Values[i])
 			}
 		}
 	}()
