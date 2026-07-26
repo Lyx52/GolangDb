@@ -3,7 +3,7 @@ package schema
 import (
 	"fmt"
 
-	"github.com/Lyx52/GolangDb/backing"
+	"github.com/Lyx52/GolangDb/old/backing"
 )
 
 type Table struct {

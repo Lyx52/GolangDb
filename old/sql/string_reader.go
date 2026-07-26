@@ -1,6 +1,9 @@
 package sql
 
-import "io"
+import (
+	"io"
+	"strings"
+)
 
 type StringReader struct {
 	buffer []rune
@@ -8,7 +11,7 @@ type StringReader struct {
 }
 
 func (s *StringReader) Peek(length int) *string {
-	if (s.pos + length) >= len(s.buffer) {
+	if (s.pos + length) > len(s.buffer) {
 		return nil
 	}
 
@@ -22,6 +25,18 @@ func (s *StringReader) PeekNext() rune {
 	}
 
 	return s.buffer[s.pos]
+}
+
+func (s *StringReader) CanRead(count int) bool {
+	return s.pos+count <= len(s.buffer)
+}
+
+func (s *StringReader) PeekNextN(count int) string {
+	builder := strings.Builder{}
+	for i := 0; i < count; i++ {
+		builder.WriteRune(s.buffer[s.pos+i])
+	}
+	return builder.String()
 }
 
 func (s *StringReader) Next() rune {

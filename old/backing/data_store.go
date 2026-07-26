@@ -1,7 +1,7 @@
 package backing
 
 import (
-	"github.com/Lyx52/GolangDb/models"
+	"github.com/Lyx52/GolangDb/old/models"
 	"github.com/Lyx52/GolangDb/signals"
 )
 

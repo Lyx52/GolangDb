@@ -1,6 +1,8 @@
 package parser
 
-import "io"
+import (
+	"io"
+)
 
 type StringReader struct {
 	buffer []rune
@@ -8,11 +10,12 @@ type StringReader struct {
 }
 
 func (s *StringReader) Peek(length int) *string {
-	if (s.pos + length) >= len(s.buffer) {
+	if (s.pos + length) > len(s.buffer) {
 		return nil
 	}
 
 	res := string(s.buffer[s.pos : s.pos+length])
+
 	return &res
 }
 

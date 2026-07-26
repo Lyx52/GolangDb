@@ -42,6 +42,9 @@ const (
 	BRACKET_CLOSE         TokenType = iota
 	SEMICOLUMN            TokenType = iota
 	MINUS                 TokenType = iota
+	COMMENT               TokenType = iota
+	ALTER                 TokenType = iota
+	DROP                  TokenType = iota
 )
 
 func (tokenType TokenType) String() string {
@@ -120,6 +123,10 @@ func (tokenType TokenType) String() string {
 		return "USE"
 	case SHOW:
 		return "SHOW"
+	case ALTER:
+		return "ALTER"
+	case DROP:
+		return "DROP"
 	default:
 		return "UNKNOWN"
 	}
@@ -147,10 +154,42 @@ var StringToKeyword = map[string]TokenType{
 	"IN":        IN,
 	"USE":       USE,
 	"SHOW":      SHOW,
+	"ALTER":     ALTER,
+	"DROP":      DROP,
+}
+var CommandTokenType = []TokenType{
+	SELECT,
+	ALTER,
+	UPDATE,
+	CREATE,
+	DELETE,
+	DROP,
+	SET,
+	INSERT,
 }
 
 type Token struct {
 	Type     TokenType
 	Value    string
 	Position int
+}
+
+func IsCommandToken(token *Token) bool {
+	for _, tokenType := range CommandTokenType {
+		if tokenType == token.Type {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsTokenType(typ TokenType, allowed ...TokenType) bool {
+	for _, v := range allowed {
+		if v == typ {
+			return true
+		}
+	}
+
+	return false
 }

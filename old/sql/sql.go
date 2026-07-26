@@ -580,7 +580,7 @@ func (parser *SqlParser) ParseCreateDatabase(lexer *BaseLexer) (error, *CreateDa
 		return fmt.Errorf("expected database name token"), nil
 	}
 
-	statement := NewCreateDatabaseStatement(databaseNameToken.StringValue())
+	statement := NewCreateDatabaseStatement(databaseNameToken.Value)
 
 	return nil, statement
 }
@@ -603,7 +603,7 @@ func (parser *SqlParser) ParseCreateTable(lexer *BaseLexer) (error, *CreateTable
 	if next == nil {
 		return fmt.Errorf("expected tokens after bracket open token"), nil
 	}
-	statement := NewCreateTableStatement(tableNameToken.StringValue())
+	statement := NewCreateTableStatement(tableNameToken.Value)
 
 	continueFields := true
 	for continueFields {
@@ -622,7 +622,7 @@ func (parser *SqlParser) ParseCreateTable(lexer *BaseLexer) (error, *CreateTable
 			return fmt.Errorf("expected field type token"), nil
 		}
 
-		err = statement.AddField(fieldName.StringValue(), fieldType.StringValue())
+		err = statement.AddField(fieldName.Value, fieldType.Value)
 
 		if err != nil {
 			return err, nil
@@ -655,7 +655,7 @@ func (parser *SqlParser) ParseCreateView(lexer *BaseLexer) (error, *CreateViewSt
 		return fmt.Errorf("expected view name token"), nil
 	}
 
-	statement := NewCreateViewStatement(viewNameToken.StringValue())
+	statement := NewCreateViewStatement(viewNameToken.Value)
 
 	return nil, statement
 }
@@ -670,7 +670,7 @@ func (parser *SqlParser) ParseUse(lexer *BaseLexer) error {
 		return fmt.Errorf("expected database name token")
 	}
 
-	statement := NewUseStatement(useDatabaseNameToken.StringValue())
+	statement := NewUseStatement(useDatabaseNameToken.Value)
 	parser.PushStatement(statement)
 
 	return nil
@@ -700,7 +700,7 @@ func (parser *SqlParser) ParseShow(lexer *BaseLexer) error {
 }
 
 func (parser *SqlParser) Parse(sql string) error {
-	lexer := NewLexer(&sql)
+	lexer := OldNewLexer(&sql)
 	err := lexer.Tokenize()
 	if err != nil {
 		return err

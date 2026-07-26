@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Lyx52/GolangDb/models"
+	"github.com/Lyx52/GolangDb/old/models"
 	"github.com/Lyx52/GolangDb/server"
 )
 

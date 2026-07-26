@@ -1,13 +1,16 @@
 package sql
 
-import "fmt"
-
 type TokenType int
 
+const TOKEN_EMPTY_VALUE = ""
+const CARRIAGE_NEWLINE = "\r\n"
+const SQL_COMMENT = "--"
 const (
 	WHITESPACE            TokenType = iota
 	WILDCARD              TokenType = iota
 	DOT                   TokenType = iota
+	IDENTIFIER            TokenType = iota
+	QUOTED_IDENTIFIER     TokenType = iota
 	COMMA                 TokenType = iota
 	OPERATOR_EQUALS       TokenType = iota
 	OPERATOR_NOT_EQUALITY TokenType = iota
@@ -40,6 +43,8 @@ const (
 	BRACKET_OPEN          TokenType = iota
 	BRACKET_CLOSE         TokenType = iota
 	SEMICOLUMN            TokenType = iota
+	MINUS                 TokenType = iota
+	COMMENT               TokenType = iota
 )
 
 func (tokenType TokenType) String() string {
@@ -50,6 +55,12 @@ func (tokenType TokenType) String() string {
 		return "WILDCARD"
 	case COMMA:
 		return "COMMA"
+	case DOT:
+		return "DOT"
+	case IDENTIFIER:
+		return "IDENTIFIER"
+	case QUOTED_IDENTIFIER:
+		return "QUOTED_IDENTIFIER"
 	case OPERATOR_EQUALS:
 		return "OPERATOR_EQUALITY"
 	case OPERATOR_NOT_EQUALITY:
@@ -117,36 +128,32 @@ func (tokenType TokenType) String() string {
 	}
 }
 
-const (
-	SelectTokenString    string = "SELECT"
-	InsertTokenString    string = "INSERT"
-	UpdateTokenString    string = "UPDATE"
-	DeleteTokenString    string = "DELETE"
-	CreateTokenString    string = "CREATE"
-	DatabaseTokenString  string = "DATABASE"
-	TableTokenString     string = "TABLE"
-	DatabasesTokenString string = "DATABASES"
-	TablesTokenString    string = "TABLES"
-	ViewTokenString      string = "VIEW"
-	FromTokenString      string = "FROM"
-	IntoTokenString      string = "INTO"
-	AsTokenString        string = "AS"
-	SetTokenString       string = "SET"
-	ValuesTokenString    string = "VALUES"
-	WhereTokenString     string = "WHERE"
-	AndTokenString       string = "AND"
-	OrTokenString        string = "OR"
-	InTokenString        string = "IN"
-	UseTokenString       string = "USE"
-	ShowTokenString      string = "SHOW"
-)
+var StringToKeyword = map[string]TokenType{
+	"SELECT":    SELECT,
+	"INSERT":    INSERT,
+	"UPDATE":    UPDATE,
+	"DELETE":    DELETE,
+	"CREATE":    CREATE,
+	"DATABASE":  DATABASE,
+	"TABLE":     TABLE,
+	"DATABASES": DATABASES,
+	"TABLES":    TABLES,
+	"VIEW":      VIEW,
+	"FROM":      FROM,
+	"INTO":      INTO,
+	"AS":        AS,
+	"SET":       SET,
+	"VALUES":    VALUES,
+	"WHERE":     WHERE,
+	"AND":       AND,
+	"OR":        OR,
+	"IN":        IN,
+	"USE":       USE,
+	"SHOW":      SHOW,
+}
 
 type Token struct {
 	Type     TokenType
-	Value    any
+	Value    string
 	Position int
-}
-
-func (token Token) StringValue() string {
-	return fmt.Sprint(token.Value)
 }
