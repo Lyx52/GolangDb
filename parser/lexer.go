@@ -12,6 +12,10 @@ const SQL_SINGLE_LINE_COMMENT = "--"
 const SQL_BINARY_NUMBER = "0b"
 const SQL_HEX_NUMBER = "0x"
 const SQL_OCTAL_NUMBER = "0o"
+const SQL_NOT_QUALITY = "<>"
+const SQL_NOT_QUALITY_SECONDARY = "!="
+const SQL_LESS_THAN_OR_EQUAL = "<="
+const SQL_MORE_THAN_OR_EQUAL = ">="
 
 func IsDigit(r rune) bool {
 	return r >= '0' && r <= '9'
@@ -222,21 +226,45 @@ func (lexer *BaseLexer) TokenizeFirstPass() error {
 		case next == '*':
 			lexer.reader.Next()
 			lexer.PushToken(WILDCARD, TOKEN_EMPTY_VALUE, lexer.reader.pos)
-		case next == ',':
+		case next == '>':
 			lexer.reader.Next()
-			lexer.PushToken(COMMA, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+			lexer.PushToken(OPERATOR_GREATER_THAN, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case next == '<':
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_LESS_THAN, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == '=':
 			lexer.reader.Next()
 			lexer.PushToken(OPERATOR_EQUALS, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_NOT_QUALITY) || lexer.TryString(SQL_NOT_QUALITY_SECONDARY):
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_NOT_EQUALITY, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_MORE_THAN_OR_EQUAL):
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_GREATER_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_LESS_THAN_OR_EQUAL):
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_LESS_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case next == ',':
+			lexer.reader.Next()
+			lexer.PushToken(COMMA, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == '(':
 			lexer.reader.Next()
 			lexer.PushToken(BRACKET_OPEN, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == ')':
 			lexer.reader.Next()
 			lexer.PushToken(BRACKET_CLOSE, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case next == '[':
+			lexer.reader.Next()
+			lexer.PushToken(SQUARE_BRACKET_OPEN, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case next == ']':
+			lexer.reader.Next()
+			lexer.PushToken(SQUARE_BRACKET_CLOSE, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == ';':
 			lexer.reader.Next()
 			lexer.PushToken(SEMICOLUMN, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case next == ':':
+			lexer.reader.Next()
+			lexer.PushToken(COLON, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == '-':
 			lexer.reader.Next()
 			lexer.PushToken(MINUS, TOKEN_EMPTY_VALUE, lexer.reader.pos)
@@ -250,6 +278,9 @@ func (lexer *BaseLexer) TokenizeFirstPass() error {
 			if err != nil {
 				return err
 			}
+		case next == '.':
+			lexer.reader.Next()
+			lexer.PushToken(DOT, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case IsDigit(next):
 			allowDot := true
 			allowScientific := true
@@ -275,7 +306,7 @@ func (lexer *BaseLexer) TokenizeFirstPass() error {
 		case IsLetter(next) || next == '_':
 			builder := strings.Builder{}
 
-			for IsLetterOrDigit(next) || next == '_' || next == '.' || next == '"' || next == '\'' {
+			for IsLetterOrDigit(next) || next == '_' || next == '"' || next == '\'' {
 				builder.WriteRune(lexer.reader.Next())
 				next = lexer.reader.PeekNext()
 			}
@@ -359,6 +390,13 @@ func (lexer *BaseLexer) TokenizeKeywordPass() {
 		if keywordType, exists := StringToKeyword[tokenUpper]; exists {
 			lexer.tokens[i].Type = keywordType
 			lexer.tokens[i].Value = TOKEN_EMPTY_VALUE
+			continue
+		}
+
+		if keywordType, exists := StringToTypeName[tokenUpper]; exists {
+			lexer.tokens[i].Type = keywordType
+			lexer.tokens[i].Value = tokenUpper
+			continue
 		}
 	}
 }
