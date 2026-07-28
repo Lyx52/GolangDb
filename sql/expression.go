@@ -9,13 +9,37 @@ type SqlExpression interface {
 	String() string
 }
 
+// ValueArrayExpression value[]
+type ValueArrayExpression struct {
+	Value []any
+}
+
+func (v *ValueArrayExpression) String() string {
+	items := make([]string, len(v.Value))
+	for i, item := range v.Value {
+		switch val := item.(type) {
+		case string:
+			items[i] = fmt.Sprintf("'%s'", val)
+		default:
+			items[i] = fmt.Sprint(val)
+		}
+	}
+
+	return fmt.Sprintf("%v", strings.Join(items, ", "))
+}
+
 // ValueExpression value
 type ValueExpression struct {
 	Value any
 }
 
 func (v *ValueExpression) String() string {
-	return fmt.Sprintf("%v", v.Value)
+	switch val := v.Value.(type) {
+	case string:
+		return fmt.Sprintf("'%s'", val)
+	default:
+		return fmt.Sprint(val)
+	}
 }
 
 // ReferenceExpression correlation.columname

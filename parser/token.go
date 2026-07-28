@@ -223,6 +223,7 @@ var OperatorTokenType = []TokenType{
 	OPERATOR_NOT_EQUALITY,
 	AND,
 	OR,
+	IN,
 }
 
 type Token struct {

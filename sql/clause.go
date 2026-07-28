@@ -56,3 +56,16 @@ func (p *OrderingClause) String() string {
 
 	return fmt.Sprintf("ORDER BY %s %s", strings.Join(items, ", "), p.Direction)
 }
+
+type ValuesClause struct {
+	Values []SqlExpression
+}
+
+func (p *ValuesClause) String() string {
+	items := make([]string, len(p.Values))
+	for i, value := range p.Values {
+		items[i] = value.String()
+	}
+
+	return fmt.Sprintf("VALUES (%s)", strings.Join(items, ", "))
+}
