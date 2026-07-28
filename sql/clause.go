@@ -69,3 +69,65 @@ func (p *ValuesClause) String() string {
 
 	return fmt.Sprintf("VALUES (%s)", strings.Join(items, ", "))
 }
+
+type InsertTargetClause struct {
+	TableName SqlExpression
+	Targets   []SqlExpression
+}
+
+func (p *InsertTargetClause) String() string {
+	items := make([]string, len(p.Targets))
+	for i, target := range p.Targets {
+		items[i] = target.String()
+	}
+
+	return fmt.Sprintf("INSERT INTO %s (%s)", p.TableName, strings.Join(items, ", "))
+}
+
+type ReturningClause struct {
+	Returning []SqlExpression
+}
+
+func (p *ReturningClause) String() string {
+	items := make([]string, len(p.Returning))
+	for i, returnValue := range p.Returning {
+		items[i] = returnValue.String()
+	}
+
+	return fmt.Sprintf("RETURNING %s", strings.Join(items, ", "))
+}
+
+type DeleteTargetClause struct {
+	TableName SqlExpression
+}
+
+func (p *DeleteTargetClause) String() string {
+	return fmt.Sprintf("DELETE FROM %s", p.TableName)
+}
+
+type TruncateTargetClause struct {
+	Truncations []SqlExpression
+	Cascade     bool
+	Restart     bool
+}
+
+func (p *TruncateTargetClause) String() string {
+	items := make([]string, len(p.Truncations))
+	for i, trunc := range p.Truncations {
+		items[i] = trunc.String()
+	}
+	parameters := make([]string, 0)
+	if p.Restart {
+		parameters = append(parameters, "RESTART IDENTITY")
+	}
+
+	if p.Cascade {
+		parameters = append(parameters, "CASCADE")
+	}
+
+	if len(parameters) > 0 {
+		return fmt.Sprintf("TRUNCATE TABLE %s %s", strings.Join(items, ", "), strings.Join(parameters, " "))
+	}
+
+	return fmt.Sprintf("TRUNCATE TABLE %s", strings.Join(items, ", "))
+}

@@ -18,15 +18,19 @@ func ParseStatement(lexer *BaseLexer, throwOnUnknown bool) (*sql.SqlStatement, e
 
 	switch next.Type {
 	case INSERT:
-		statement.Type = sql.CREATE
+		statement.Type = sql.INSERT
 	case SELECT:
 		statement.Type = sql.READ
 	case UPDATE:
 		statement.Type = sql.UPDATE
 	case DELETE:
 		statement.Type = sql.DELETE
-		//default:
-		//	return nil, fmt.Errorf("unknown statement type: %v", next.Type)
+	case TRUNCATE:
+		statement.Type = sql.TRUNCATE
+	case CREATE:
+		statement.Type = sql.CREATE
+	default:
+		return nil, fmt.Errorf("unknown statement type: %v", next.Type)
 	}
 
 	for next != nil {
@@ -85,7 +89,7 @@ func parseFunctionExpression(lexer *BaseLexer) (*sql.FunctionExpression, error) 
 	var parameters []sql.SqlExpression
 	var err error
 	if next != nil && next.Type == BRACKET_OPEN {
-		parameters, err = parseExpressionList(lexer)
+		parameters, err = ParseExpressionList(lexer)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +133,7 @@ func parseCombinatoryExpression(lexer *BaseLexer, previous sql.SqlExpression) (*
 	}, nil
 }
 
-func parseExpressionList(lexer *BaseLexer) ([]sql.SqlExpression, error) {
+func ParseExpressionList(lexer *BaseLexer) ([]sql.SqlExpression, error) {
 	lexer.ConsumeTokens(WHITESPACE)
 	next := lexer.PopToken()
 	if next == nil || next.Type != BRACKET_OPEN {
@@ -148,6 +152,11 @@ func parseExpressionList(lexer *BaseLexer) ([]sql.SqlExpression, error) {
 		next = lexer.PeekToken()
 		if next == nil || next.Type == BRACKET_CLOSE {
 			continueExpressions = false
+		}
+
+		if next != nil && next.Type == COMMA {
+			lexer.PopToken()
+			next = lexer.PeekToken()
 		}
 
 		expressions = append(expressions, expr)

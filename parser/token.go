@@ -57,6 +57,13 @@ const (
 	BY                             TokenType = iota
 	DESC                           TokenType = iota
 	ASC                            TokenType = iota
+	RETURNING                      TokenType = iota
+	AVG                            TokenType = iota
+	TRUNCATE                       TokenType = iota
+	RESTART_IDENTITY               TokenType = iota
+	CONTINUE_IDENTITY              TokenType = iota
+	CASCADE                        TokenType = iota
+	RESTRICT                       TokenType = iota
 )
 
 func (tokenType TokenType) String() string {
@@ -159,6 +166,20 @@ func (tokenType TokenType) String() string {
 		return "BY"
 	case TYPE_NAME:
 		return "TYPE_NAME"
+	case RETURNING:
+		return "RETURNING"
+	case AVG:
+		return "AVG"
+	case TRUNCATE:
+		return "TRUNCATE"
+	case RESTART_IDENTITY:
+		return "RESTART IDENTITY"
+	case CONTINUE_IDENTITY:
+		return "CONTINUE IDENTITY"
+	case CASCADE:
+		return "CASCADE"
+	case RESTRICT:
+		return "RESTRICT"
 	default:
 		return "UNKNOWN"
 	}
@@ -193,25 +214,20 @@ var StringToKeyword = map[string]TokenType{
 	"ASC":       ASC,
 	"ORDER":     ORDER,
 	"BY":        BY,
+	"RETURNING": RETURNING,
+	"AVG":       AVG,
+	"TRUNCATE":  TRUNCATE,
+	"CASCADE":   CASCADE,
+	"RESTRICT":  RESTRICT,
 }
 
 var StringToTypeName = map[string]TokenType{
 	"NUMERIC": TYPE_NAME,
 }
 
-var CommandTokenType = []TokenType{
-	SELECT,
-	ALTER,
-	UPDATE,
-	CREATE,
-	DELETE,
-	DROP,
-	SET,
-	INSERT,
-}
-
 var FunctionTokenType = []TokenType{
 	CAST,
+	AVG,
 }
 
 var OperatorTokenType = []TokenType{
@@ -230,16 +246,6 @@ type Token struct {
 	Type     TokenType
 	Value    string
 	Position int
-}
-
-func IsCommandToken(token *Token) bool {
-	for _, tokenType := range CommandTokenType {
-		if tokenType == token.Type {
-			return true
-		}
-	}
-
-	return false
 }
 
 func IsFunctionToken(token *Token) bool {

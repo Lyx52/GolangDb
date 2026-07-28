@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/Lyx52/GolangDb/sql"
+import (
+	"fmt"
+
+	"github.com/Lyx52/GolangDb/sql"
+)
 
 var ClauseParsers map[TokenType]ClauseParseFunc = nil
 
@@ -10,19 +14,148 @@ func InitClauseParsers() {
 	}
 
 	ClauseParsers = map[TokenType]ClauseParseFunc{
-		SELECT:   parseProjectionClause,
-		FROM:     parseTableReferenceClause,
-		WHERE:    parseSearchConditionClause,
-		ORDER_BY: parseOrderingClause,
-		VALUES:   parseValuesClause,
+		SELECT:    parseProjectionClause,
+		FROM:      parseTableReferenceClause,
+		WHERE:     parseSearchConditionClause,
+		ORDER_BY:  parseOrderingClause,
+		VALUES:    parseValuesClause,
+		INSERT:    parseInsertTargetClause,
+		RETURNING: parseReturningClause,
+		DELETE:    parseDeleteTargetClause,
+		TRUNCATE:  parseTruncateTargetClause,
+		CREATE:    parseCreateTargetClause,
 	}
 }
 
 type ClauseParseFunc func(lexer *BaseLexer) (sql.SqlClause, error)
 
+func parseCreateTargetClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	return nil, nil
+}
+
+func parseTruncateTargetClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PeekToken()
+	if next != nil && next.Type == TABLE {
+		lexer.PopToken()
+		next = lexer.PeekToken()
+	}
+
+	truncatedTables := make([]sql.SqlExpression, 0)
+	continueTruncatedTables := true
+	for continueTruncatedTables {
+		lexer.ConsumeTokens(WHITESPACE)
+		expr, err := ParseExpression(lexer)
+		if err != nil {
+			return nil, err
+		}
+		lexer.ConsumeTokens(WHITESPACE)
+		next = lexer.PeekToken()
+		if next != nil && next.Type == COMMA {
+			lexer.PopToken()
+		} else {
+			continueTruncatedTables = false
+		}
+
+		truncatedTables = append(truncatedTables, expr)
+		next = lexer.PeekToken()
+	}
+
+	cascade := false
+	restart := false
+	next = lexer.PopToken()
+	for next != nil {
+		lexer.ConsumeTokens(WHITESPACE)
+		switch next.Type {
+		case RESTART_IDENTITY:
+			restart = true
+		case CONTINUE_IDENTITY:
+			restart = false
+		case CASCADE:
+			cascade = true
+		case RESTRICT:
+			cascade = false
+		}
+
+		next = lexer.PopToken()
+	}
+
+	return &sql.TruncateTargetClause{
+		Truncations: truncatedTables,
+		Restart:     restart,
+		Cascade:     cascade,
+	}, nil
+}
+
+func parseReturningClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PeekToken()
+	returningFields := make([]sql.SqlExpression, 0)
+	continueFields := true
+	for continueFields {
+		lexer.ConsumeTokens(WHITESPACE)
+		expr, err := ParseExpression(lexer)
+		if err != nil {
+			return nil, err
+		}
+		lexer.ConsumeTokens(WHITESPACE)
+		next = lexer.PeekToken()
+		if next != nil && next.Type == COMMA {
+			lexer.PopToken()
+		} else {
+			continueFields = false
+		}
+
+		returningFields = append(returningFields, expr)
+		next = lexer.PeekToken()
+	}
+
+	return &sql.ReturningClause{
+		Returning: returningFields,
+	}, nil
+}
+
+func parseDeleteTargetClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PopToken()
+	if next == nil || next.Type != FROM {
+		return nil, fmt.Errorf("expected FROM but got %v", next)
+	}
+
+	tableNameExpr, err := ParseExpression(lexer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sql.DeleteTargetClause{
+		TableName: tableNameExpr,
+	}, nil
+}
+
+func parseInsertTargetClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PopToken()
+	if next == nil || next.Type != INTO {
+		return nil, fmt.Errorf("expected INTO but got %v", next)
+	}
+
+	tableNameExpr, err := ParseExpression(lexer)
+	if err != nil {
+		return nil, err
+	}
+
+	targetList, err := ParseExpressionList(lexer)
+
+	return &sql.InsertTargetClause{
+		TableName: tableNameExpr,
+		Targets:   targetList,
+	}, nil
+}
+
 func parseValuesClause(lexer *BaseLexer) (sql.SqlClause, error) {
 	lexer.ConsumeTokens(WHITESPACE)
-	values, err := parseExpressionList(lexer)
+	values, err := ParseExpressionList(lexer)
 	if err != nil {
 		return nil, err
 	}

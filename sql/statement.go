@@ -5,11 +5,13 @@ import "strings"
 type SqlStatementType int
 
 const (
-	UNKNOWN SqlStatementType = iota
-	CREATE  SqlStatementType = iota
-	READ    SqlStatementType = iota
-	UPDATE  SqlStatementType = iota
-	DELETE  SqlStatementType = iota
+	UNKNOWN  SqlStatementType = iota
+	INSERT   SqlStatementType = iota
+	CREATE   SqlStatementType = iota
+	READ     SqlStatementType = iota
+	UPDATE   SqlStatementType = iota
+	DELETE   SqlStatementType = iota
+	TRUNCATE SqlStatementType = iota
 )
 
 type SqlStatement struct {
