@@ -16,6 +16,7 @@ const SQL_NOT_QUALITY = "<>"
 const SQL_NOT_QUALITY_SECONDARY = "!="
 const SQL_LESS_THAN_OR_EQUAL = "<="
 const SQL_MORE_THAN_OR_EQUAL = ">="
+const SQL_ORDER_BY = "ORDER BY"
 
 func IsDigit(r rune) bool {
 	return r >= '0' && r <= '9'
@@ -220,6 +221,34 @@ func (lexer *BaseLexer) TokenizeFirstPass() error {
 			}
 
 			lexer.PushToken(NUMBER, strconv.FormatInt(value, 10), lexer.reader.pos)
+		case lexer.TryString(SQL_NOT_QUALITY) || lexer.TryString(SQL_NOT_QUALITY_SECONDARY):
+			err := lexer.reader.Consume(2)
+			if err != nil {
+				return err
+			}
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_NOT_EQUALITY, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_MORE_THAN_OR_EQUAL):
+			err := lexer.reader.Consume(2)
+			if err != nil {
+				return err
+			}
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_GREATER_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_LESS_THAN_OR_EQUAL):
+			err := lexer.reader.Consume(2)
+			if err != nil {
+				return err
+			}
+			lexer.reader.Next()
+			lexer.PushToken(OPERATOR_LESS_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
+		case lexer.TryString(SQL_ORDER_BY):
+			err := lexer.reader.Consume(8)
+			if err != nil {
+				return err
+			}
+			lexer.reader.Next()
+			lexer.PushToken(ORDER_BY, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case unicode.IsSpace(next):
 			lexer.reader.Next()
 			lexer.PushToken(WHITESPACE, TOKEN_EMPTY_VALUE, lexer.reader.pos)
@@ -235,15 +264,6 @@ func (lexer *BaseLexer) TokenizeFirstPass() error {
 		case next == '=':
 			lexer.reader.Next()
 			lexer.PushToken(OPERATOR_EQUALS, TOKEN_EMPTY_VALUE, lexer.reader.pos)
-		case lexer.TryString(SQL_NOT_QUALITY) || lexer.TryString(SQL_NOT_QUALITY_SECONDARY):
-			lexer.reader.Next()
-			lexer.PushToken(OPERATOR_NOT_EQUALITY, TOKEN_EMPTY_VALUE, lexer.reader.pos)
-		case lexer.TryString(SQL_MORE_THAN_OR_EQUAL):
-			lexer.reader.Next()
-			lexer.PushToken(OPERATOR_GREATER_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
-		case lexer.TryString(SQL_LESS_THAN_OR_EQUAL):
-			lexer.reader.Next()
-			lexer.PushToken(OPERATOR_LESS_THAN_OR_EQUAL, TOKEN_EMPTY_VALUE, lexer.reader.pos)
 		case next == ',':
 			lexer.reader.Next()
 			lexer.PushToken(COMMA, TOKEN_EMPTY_VALUE, lexer.reader.pos)
@@ -332,6 +352,7 @@ func (lexer *BaseLexer) TokenizeCombineTokens() {
 			numeric := *lexer.PopToken()
 			numeric.Value = "-" + numeric.Value
 			tokens = append(tokens, numeric)
+
 			// COMBINE WHITESPACES into ONE whitespace
 		} else if current.Type == WHITESPACE {
 			lexer.ConsumeTokens(WHITESPACE)

@@ -9,6 +9,15 @@ type SqlExpression interface {
 	String() string
 }
 
+// ValueExpression value
+type ValueExpression struct {
+	Value any
+}
+
+func (v *ValueExpression) String() string {
+	return fmt.Sprintf("%v", v.Value)
+}
+
 // ReferenceExpression correlation.columname
 type ReferenceExpression struct {
 	Correlation string
@@ -139,12 +148,8 @@ type CombinatoryExpression struct {
 	Left     SqlExpression
 	Right    SqlExpression
 	Operator string
-	Depth    int
 }
 
 func (s *CombinatoryExpression) String() string {
-	if s.Depth > 0 {
-		return fmt.Sprintf("(%s %s %s)", s.Left, s.Operator, s.Right)
-	}
 	return fmt.Sprintf("%s %s %s", s.Left, s.Operator, s.Right)
 }

@@ -42,3 +42,17 @@ type SearchConditionClause struct {
 func (p *SearchConditionClause) String() string {
 	return fmt.Sprintf("WHERE %s", p.Condition)
 }
+
+type OrderingClause struct {
+	Orders    []SqlExpression
+	Direction OrderDirection
+}
+
+func (p *OrderingClause) String() string {
+	items := make([]string, len(p.Orders))
+	for i, order := range p.Orders {
+		items[i] = order.String()
+	}
+
+	return fmt.Sprintf("ORDER BY %s %s", strings.Join(items, ", "), p.Direction)
+}

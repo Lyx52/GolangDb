@@ -7,18 +7,27 @@ import (
 	"github.com/Lyx52/GolangDb/sql"
 )
 
-var ClauseParsers map[TokenType]ClauseParseFunc
+var ClauseParsers map[TokenType]ClauseParseFunc = nil
+
+func InitClauseParsers() {
+	if ClauseParsers != nil {
+		return
+	}
+
+	ClauseParsers = map[TokenType]ClauseParseFunc{
+		SELECT:   parseProjectionClause,
+		FROM:     parseTableReferenceClause,
+		WHERE:    parseSearchConditionClause,
+		ORDER_BY: parseOrderingClause,
+	}
+}
 
 type SqlParser struct {
 	statements []*sql.SqlStatement
 }
 
 func NewSqlParser() *SqlParser {
-	ClauseParsers = map[TokenType]ClauseParseFunc{
-		SELECT: parseProjectionClause,
-		FROM:   parseTableReferenceClause,
-		WHERE:  parseSearchConditionClause,
-	}
+	InitClauseParsers()
 	return &SqlParser{
 		statements: make([]*sql.SqlStatement, 0),
 	}
@@ -79,9 +88,57 @@ func parseProjectionClause(lexer *BaseLexer) (sql.SqlClause, error) {
 	return &sql.ProjectionClause{Fields: fields}, nil
 }
 
-func parseSearchConditionClause(lexer *BaseLexer) (sql.SqlClause, error) {
+func parseOrderingClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	next := lexer.PeekToken()
+	orders := make([]sql.SqlExpression, 0)
+	continueOrders := true
+	for continueOrders {
+		lexer.ConsumeTokens(WHITESPACE)
+		expr, err := ParseExpression(lexer)
+		if err != nil {
+			return nil, err
+		}
+		lexer.ConsumeTokens(WHITESPACE)
+		next = lexer.PeekToken()
+		if next != nil && next.Type == COMMA {
+			lexer.PopToken()
+		} else {
+			continueOrders = false
+		}
 
-	return &sql.SearchConditionClause{}, nil
+		orders = append(orders, expr)
+		next = lexer.PeekToken()
+	}
+
+	lexer.ConsumeTokens(WHITESPACE)
+	next = lexer.PeekToken()
+	direction := sql.ORDER_ASC
+	if next != nil && next.Type == DESC {
+		lexer.PopToken()
+		direction = sql.ORDER_DESC
+	}
+
+	if next != nil && next.Type == ASC {
+		lexer.PopToken()
+		direction = sql.ORDER_ASC
+	}
+
+	return &sql.OrderingClause{
+		Orders:    orders,
+		Direction: direction,
+	}, nil
+}
+
+func parseSearchConditionClause(lexer *BaseLexer) (sql.SqlClause, error) {
+	lexer.ConsumeTokens(WHITESPACE)
+	condition, err := ParseExpression(lexer)
+	if err != nil {
+		return nil, err
+	}
+	return &sql.SearchConditionClause{
+		Condition: condition,
+	}, nil
 }
 
 func parseTableReferenceClause(lexer *BaseLexer) (sql.SqlClause, error) {
@@ -196,6 +253,24 @@ func parseQueryExpression(lexer *BaseLexer) (*sql.QueryExpression, error) {
 	}, nil
 }
 
+func parseCombinatoryExpression(lexer *BaseLexer, previous sql.SqlExpression) (*sql.CombinatoryExpression, error) {
+	operator := lexer.PopToken()
+	if operator == nil || !IsOperatorToken(operator) {
+		return nil, fmt.Errorf("expected operator token")
+	}
+
+	right, err := ParseExpression(lexer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sql.CombinatoryExpression{
+		Left:     previous,
+		Right:    right,
+		Operator: operator.Type.String(),
+	}, nil
+}
+
 func parseExpressionList(lexer *BaseLexer) ([]sql.SqlExpression, error) {
 
 	lexer.ConsumeTokens(WHITESPACE)
@@ -269,7 +344,6 @@ func parseSubscriptExpression(lexer *BaseLexer, previous sql.SqlExpression) (sql
 	lexer.ConsumeTokens(WHITESPACE)
 	next = lexer.PopToken()
 	if next == nil || next.Type != COLON {
-		next = lexer.PopToken()
 		if next == nil || next.Type != SQUARE_BRACKET_CLOSE {
 			return nil, fmt.Errorf("expected close colon")
 		}
@@ -383,7 +457,7 @@ func parseSubExpressions(lexer *BaseLexer, previous sql.SqlExpression) (sql.SqlE
 	}
 
 	if next != nil && IsOperatorToken(next) {
-		expr, err = parse(lexer, previous)
+		expr, err = parseCombinatoryExpression(lexer, previous)
 	}
 
 	if err != nil {
@@ -426,6 +500,13 @@ func ParseExpression(lexer *BaseLexer) (sql.SqlExpression, error) {
 
 	if next.Type == IDENTIFIER {
 		expr, err = parseIdentifierExpression(lexer)
+	}
+
+	if IsTokenType(next.Type, NUMBER, STRING) {
+		lexer.PopToken()
+		expr = &sql.ValueExpression{
+			Value: next.Value,
+		}
 	}
 
 	// Sub query

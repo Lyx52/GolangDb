@@ -52,6 +52,11 @@ const (
 	DROP                           TokenType = iota
 	CAST                           TokenType = iota
 	TYPE_NAME                      TokenType = iota
+	ORDER_BY                       TokenType = iota
+	ORDER                          TokenType = iota
+	BY                             TokenType = iota
+	DESC                           TokenType = iota
+	ASC                            TokenType = iota
 )
 
 func (tokenType TokenType) String() string {
@@ -59,27 +64,27 @@ func (tokenType TokenType) String() string {
 	case WHITESPACE:
 		return "WHITESPACE"
 	case WILDCARD:
-		return "WILDCARD"
+		return "*"
 	case COMMA:
-		return "COMMA"
+		return ","
 	case DOT:
-		return "DOT"
+		return "."
 	case IDENTIFIER:
 		return "IDENTIFIER"
 	case QUOTED_IDENTIFIER:
 		return "QUOTED_IDENTIFIER"
 	case OPERATOR_EQUALS:
-		return "OPERATOR_EQUALITY"
+		return "="
 	case OPERATOR_NOT_EQUALITY:
-		return "OPERATOR_NOT_EQUALITY"
+		return "<>"
 	case OPERATOR_LESS_THAN:
-		return "OPERATOR_LESS_THAN"
+		return "<"
 	case OPERATOR_GREATER_THAN:
-		return "OPERATOR_GREATER_THAN"
+		return ">"
 	case OPERATOR_LESS_THAN_OR_EQUAL:
-		return "OPERATOR_LESS_THAN_OR_EQUAL"
+		return "<="
 	case OPERATOR_GREATER_THAN_OR_EQUAL:
-		return "OPERATOR_GREATER_THAN_OR_EQUAL"
+		return ">="
 	case SELECT:
 		return "SELECT"
 	case INSERT:
@@ -113,17 +118,17 @@ func (tokenType TokenType) String() string {
 	case FIELD:
 		return "FIELD"
 	case BRACKET_OPEN:
-		return "BRACKET_OPEN"
+		return "("
 	case BRACKET_CLOSE:
-		return "BRACKET_CLOSE"
+		return ")"
 	case SQUARE_BRACKET_OPEN:
-		return "SQUARE_BRACKET_OPEN"
+		return "["
 	case SQUARE_BRACKET_CLOSE:
-		return "SQUARE_BRACKET_CLOSE"
+		return "]"
 	case SEMICOLUMN:
-		return "SEMICOLUMN"
+		return ";"
 	case COLON:
-		return "COLON"
+		return ":"
 	case AS:
 		return "AS"
 	case SET:
@@ -132,6 +137,8 @@ func (tokenType TokenType) String() string {
 		return "OR"
 	case WHERE:
 		return "WHERE"
+	case ORDER_BY:
+		return "ORDER BY"
 	case AND:
 		return "AND"
 	case IN:
@@ -146,6 +153,10 @@ func (tokenType TokenType) String() string {
 		return "DROP"
 	case CAST:
 		return "CAST"
+	case ORDER:
+		return "ORDER"
+	case BY:
+		return "BY"
 	case TYPE_NAME:
 		return "TYPE_NAME"
 	default:
@@ -178,6 +189,10 @@ var StringToKeyword = map[string]TokenType{
 	"ALTER":     ALTER,
 	"DROP":      DROP,
 	"CAST":      CAST,
+	"DESC":      DESC,
+	"ASC":       ASC,
+	"ORDER":     ORDER,
+	"BY":        BY,
 }
 
 var StringToTypeName = map[string]TokenType{
@@ -206,6 +221,8 @@ var OperatorTokenType = []TokenType{
 	OPERATOR_LESS_THAN,
 	OPERATOR_EQUALS,
 	OPERATOR_NOT_EQUALITY,
+	AND,
+	OR,
 }
 
 type Token struct {
